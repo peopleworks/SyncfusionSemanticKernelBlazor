@@ -1,0 +1,334 @@
+﻿@page "/help"
+@attribute [StreamRendering]
+@using Syncfusion.Blazor.InteractiveChat
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.SplitButtons
+@inject IJSRuntime JSRuntime
+@inject Microsoft.AspNetCore.Components.NavigationManager UriHelper
+<div class="control-section">
+    <div class="template-aiassistview">
+        <SfAIAssistView ID="aiAssistView" @ref="AIAssist" PromptSuggestions="@suggestions" PromptSuggestionsHeader="Hello! Ask Questions, to better understand how your prompt interacts with AI Help Assistance!" PromptRequested="@PromptRequest">
+            <AssistViews>
+                <AssistView>
+                    <BannerTemplate>
+                        <div class="banner-content">
+                            <h3>✨Help Assistance</h3>
+                            <SfCarousel ID="bannerCarousel" ButtonsVisibility="CarouselButtonVisibility.Visible" Width="100%" Height="60%" ShowIndicators="false" PartialVisible="true">
+                                @foreach (CarouselModel carouselItem in CarouselList)
+                                {
+                                    <CarouselItem>
+                                        <div class="carousel-template" @onclick="() => OnCarouselItemClick(carouselItem)">
+                                            <img src=@($"images/" + @carouselItem.ImagePath) />
+                                            <div class="e-card">
+                                                <div class="e-card-header">
+                                                    @carouselItem.Suggestion
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CarouselItem>
+                                }
+                            </SfCarousel>
+                        </div>
+                    </BannerTemplate>
+                    <PromptItemTemplate>
+                        <div class="promptItemContent">
+                            <div class="prompt-header">
+                                You
+                                <span class="e-icons e-user"></span>
+                            </div>
+                            <div class="content">@context.Prompt.Replace(@"<span class=""e-icons e-circle-info""></span>", "")</div>
+                        </div>
+                    </PromptItemTemplate>
+                    <ResponseItemTemplate>
+                        <div class="responseItemContent">
+                            <div class="response-header">
+                                💡Help Assistant
+                            </div>
+                            <div class="content">@((MarkupString)context.Response)</div>
+                        </div>
+                    </ResponseItemTemplate>
+                    <PromptSuggestionItemTemplate>
+                        <div class='suggestion-item active'>
+                            <span class="e-icons e-circle-info"></span>
+                            <div class="content">@context.PromptSuggestion</div>
+                        </div>
+                    </PromptSuggestionItemTemplate>
+                </AssistView>
+            </AssistViews>
+            <AssistViewToolbar>
+                <AssistViewToolbarItem Type="ItemType.Spacer"></AssistViewToolbarItem>
+                <AssistViewToolbarItem Type="ItemType.Input">
+                    <Template>
+                        <SfDropDownButton id="ddMenu" IconCss="e-icons e-user" CssClass="e-caret-hide">
+                            <DropDownMenuItems>
+                                <DropDownMenuItem Text="Settings" IconCss="e-icons e-settings"></DropDownMenuItem>
+                                <DropDownMenuItem Separator="true"></DropDownMenuItem>
+                                <DropDownMenuItem Text="Log out"></DropDownMenuItem>
+                            </DropDownMenuItems>
+                        </SfDropDownButton>
+                    </Template>
+                </AssistViewToolbarItem>
+            </AssistViewToolbar>
+        </SfAIAssistView>
+    </div>
+</div>
+
+@* TODO:Open a PopUP *@
+
+@code {
+    private SfAIAssistView AIAssist;
+    private SfTextArea TextArea;
+    private string textAreaValue;
+    private bool shouldShowSuggestion { get; set; } = true;
+    private Dictionary<int, bool> promptCopiedState = new Dictionary<int, bool>();
+    private Dictionary<int, bool> responseCopiedState = new Dictionary<int, bool>();
+    private string promptItem;
+    List<string> suggestions = new List<string> { "How can I learn more about Semantic Kernel?", "How can I learn more about Syncfusion Maui Controls?" };
+    public class AssistModel
+    {
+        public string Prompt { get; set; }
+        public string Response { get; set; }
+        public List<string> SuggestionData { get; set; }
+    }
+    private List<AssistModel> prompts = new List<AssistModel>()
+    {
+        new AssistModel() { Prompt = "How can I learn more about Semantic Kernel?", Response = "<p><strong>Semantic Kernel</strong> is a powerful framework for building AI solutions, offering several key characteristics and opportunities:</p> <ul> <li><strong>Flexibility</strong>: Easily integrate AI capabilities into existing applications.</li> <li><strong>Scalability</strong>: Build robust solutions that can grow with your needs.</li> <li><strong>Seamless Integration</strong>: Work with various AI models and conventional programming languages.</li> <li><strong>Orchestration</strong>: Automate complex tasks using AI-driven planning.</li> <li><strong>Extensibility</strong>: Add custom plugins and skills to enhance functionality.</li> <li><strong>Memory Management</strong>: Utilize embeddings-based memory for context retention.</li> <li><strong>Language Support</strong>: Available for C#, Python, and Java developers.</li> </ul> <p>Build robust, future-proof AI solutions that evolve with technological advancements. Learn more at <a href='https://learn.microsoft.com/en-us/semantic-kernel/' target='_blank'>Semantic Kernel documentation</a>.</p>", SuggestionData = new List<string> { "How can I learn more about Syncfusion controls for Blazor?", "How can I learn more about Kernel Memory?" } },
+        new AssistModel() { Prompt = "How can I learn more about Syncfusion Maui Controls?", Response = "<p><strong>Syncfusion</strong> offers a comprehensive <strong>.NET MAUI</strong> component library for building cross-platform mobile and desktop applications: <ul> <li><strong>Native Feel</strong>: Controls built from scratch using .NET MAUI for a framework-like experience.</li> <li><strong>High-Volume Data Handling</strong>: Every control is optimized to work efficiently with large datasets.</li> <li><strong>Office Integration</strong>: View and edit Excel, PDF, Word, and PowerPoint files in your apps.</li> <li><strong>Cross-Platform</strong>: Write once, run on iOS, Android, Windows, and macOS.</li> <li><strong>Regular Updates</strong>: Weekly minor improvements and bug fixes to keep your app up-to-date.</li> <li><strong>Extensive Support</strong>: Unlimited dedicated support via forum, live chat, tickets, and more.</li> <li><strong>Platform Support</strong>: Compatible with Android, iOS, macOS, and Windows.</li> </ul> 'Create powerful, cross-platform applications with ease using Syncfusion .NET MAUI components.' Explore the full range of components at <a href='https://www.syncfusion.com/maui-controls' target='_blank'>Syncfusion .NET MAUI Controls</a></p>", SuggestionData = new List<string>  { "How can I learn more about Syncfusion controls for Blazor?", "How can I learn more about Kernel Memory?" } },
+        new AssistModel() { Prompt = "How can I learn more about Syncfusion controls for Blazor?", Response = "<p><strong>Syncfusion</strong> offers a comprehensive <strong>Blazor component library</strong> with 85+ responsive, lightweight components for building modern web applications: <ul> <li><strong>Versatile Components</strong>: Includes DataGrid, 50+ Charts, Scheduler, and more.</li> <li><strong>Compatibility</strong>: Works seamlessly with both Blazor server-side and WebAssembly projects.</li> <li><strong>Customizable Themes</strong>: Pixel-perfect built-in themes in Tailwind CSS, Bootstrap, Material, and Fabric designs.</li> <li><strong>High Performance</strong>: Optimized for handling large volumes of data.</li> <li><strong>Office Integration</strong>: Add Excel, PDF, Word, and PowerPoint capabilities to your apps.</li> <li><strong>Extensive Support</strong>: Dedicated support via forum, live chat, and tickets, plus comprehensive documentation and tutorials.</li> </ul> 'Build powerful, feature-rich Blazor applications with ease using Syncfusion components.' Explore the full range of components at <a href='https://www.syncfusion.com/blazor-components' target='_blank'>Syncfusion Blazor Components</a></p>"},
+        new AssistModel() { Prompt = "How can I learn more about Kernel Memory?", Response = "<p><strong>Microsoft Kernel Memory</strong> is a multi-modal AI Service designed for efficient data indexing and retrieval: <ul> <li><strong>Versatile Deployment</strong>: Available as a Web Service, Docker container, Plugin for ChatGPT/Copilot/Semantic Kernel, and .NET library.</li> <li><strong>Advanced Capabilities</strong>: Supports Retrieval Augmented Generation (RAG), synthetic memory, and custom semantic memory processing.</li> <li><strong>Multi-format Support</strong>: Handles various data formats including web pages, PDF, images, Office documents, and more.</li> <li><strong>Flexible Integration</strong>: Can be used with any language, tool, or platform, including browser extensions and ChatGPT assistants.</li> <li><strong>Powerful Search</strong>: Offers cosine similarity and hybrid search with filters.</li> <li><strong>Enhanced Features</strong>: Includes RAG with source lookup, summarization, OCR, and security filters.</li> <li><strong>Scalable Processing</strong>: Supports asynchronous processing for large document ingestion.</li> </ul> 'Empower your applications with intelligent memory and efficient data retrieval using Microsoft Kernel Memory.' Learn more at <a href='https://microsoft.github.io/kernel-memory/' target='_blank'>Microsoft Kernel Memory Documentation</a></p>" },
+     };
+    public class CarouselModel
+    {
+        public string ImagePath { get; set; }
+        public string Suggestion { get; set; }
+    }
+    private List<CarouselModel> CarouselList = new List<CarouselModel>()
+    {
+        new CarouselModel() { ImagePath = "syncfusionblazor.jpg", Suggestion = "How can I learn more about Syncfusion controls for Blazor?" },
+        new CarouselModel() { ImagePath = "semantickernel.png", Suggestion = "How can I learn more about Semantic Kernel?" },
+        new CarouselModel() { ImagePath = "syncfusionmaui.jpg", Suggestion = "How can I learn more about Syncfusion Maui Controls?" },
+        new CarouselModel() { ImagePath = "kernelmemory.jpg", Suggestion = "How can I learn more about Kernel Memory?" }
+    };
+    private void OnCarouselItemClick(CarouselModel carouselItem)
+    {
+        string prompt = carouselItem.Suggestion;
+        if (!string.IsNullOrEmpty(prompt))
+        {
+            AIAssist.ExecutePromptAsync(prompt);
+        }
+    }
+    private async Task PromptRequest(AssistViewPromptRequestedEventArgs args)
+    {
+        await Task.Delay(2000);
+        var isPromptFound = prompts.Any(prompt => prompt.Prompt == args.Prompt);
+        var promptData = prompts.FirstOrDefault(prompt => prompt.Prompt == args.Prompt);
+        var defaultResponse = "I don't have this information, plese review it and ask again.";
+
+        // Fill Response
+
+        var markdownAssistant = new MarkdownAssistant();
+        markdownAssistant.LoadDocument("Help");
+
+
+        if (isPromptFound)
+        {
+            args.Response = promptData.Response;
+        }
+        else
+        {
+            //: defaultResponse;
+            args.Response = await markdownAssistant.AskQuestionAsync(args.Prompt);
+
+        }
+
+        // Prompt Suggestion
+        args.PromptSuggestions = isPromptFound ? promptData.SuggestionData : suggestions;
+    }
+}
+<style>
+    .template-aiassistview {
+        height: 720px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+        .template-aiassistview .banner-content .e-assistview-icon:before {
+            margin-right: 10px;
+        }
+
+        .template-aiassistview .banner-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            align-items: center;
+            padding: 10px 10px;
+            width: 65%;
+            margin: 0 auto;
+        }
+
+        .template-aiassistview .e-carousel.e-partial .e-carousel-slide-container {
+            padding: 0 50px;
+        }
+
+        .template-aiassistview .banner-content h3 {
+            display: flex;
+            margin: 20px 0px;
+            font-size: 25px;
+        }
+
+        .template-aiassistview .banner-content .carousel-template {
+            padding: 5px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .template-aiassistview .banner-content img {
+            width: 100%;
+            height: 250px;
+            border-radius: 10px;
+        }
+
+        .template-aiassistview .banner-content .e-card {
+            position: absolute;
+            bottom: 20px;
+            width: 86%;
+            opacity: 0.8;
+        }
+
+        .template-aiassistview .banner-content .e-card-header {
+            width: 100%;
+            padding: 12px;
+        }
+
+        .template-aiassistview .e-aiassist-view .e-aiassist-views .e-aiassist-suggestions li {
+            padding: 0;
+            border: none;
+            box-shadow: none;
+        }
+
+        .template-aiassistview .suggestion-item {
+            display: flex;
+            align-items: center;
+            background-color: #686868;
+            color: white;
+            padding: 4px 10px;
+            opacity: 0.8;
+            gap: 5px;
+            height: 35px;
+            border-radius: 5px;
+        }
+
+            .template-aiassistview .suggestion-item .content {
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+        .template-aiassistview #ddMenu {
+            border-radius: 50%;
+        }
+
+        .template-aiassistview .e-aiassist-view .e-aiassist-views .e-aiassist-prompt-text {
+            background: none;
+        }
+
+        .template-aiassistview .promptItemContent,
+        .template-aiassistview .responseItemContent {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .template-aiassistview .promptItemContent {
+            align-items: flex-end;
+            margin-right: 20px
+        }
+
+        .template-aiassistview .responseItemContent {
+            margin-left: 20px
+        }
+
+            .template-aiassistview .promptItemContent .prompt-header,
+            .template-aiassistview .responseItemContent .response-header {
+                font-size: 20px;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+            }
+
+        .template-aiassistview #ddMenu.e-btn.e-icon-btn {
+            padding: 8px;
+            line-height: 14px;
+        }
+
+        .template-aiassistview #ddMenu.e-dropdown-btn.e-btn .e-btn-icon {
+            margin-left: 0;
+            width: 1em;
+        }
+
+        .template-aiassistview .promptItemContent .prompt-header span {
+            margin-left: 10px;
+        }
+
+        .template-aiassistview .promptItemContent .content {
+            margin-right: 35px;
+        }
+
+        .template-aiassistview .responseItemContent .content {
+            margin-left: 35px;
+        }
+
+        .template-aiassistview .e-response-item-template .e-toolbar-items {
+            margin-left: 35px;
+        }
+
+        .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button,
+        .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button:focus,
+        .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button:hover,
+        .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button,
+        .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button:focus,
+        .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button:hover {
+            outline: none;
+            background-color: #f0f0f0;
+            .e-btn-icon
+
+    {
+        color: #333;
+    }
+
+    }
+
+    body[class*="dark"] .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button,
+    body[class*="high"] .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button,
+    body[class*="dark"] .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button:focus,
+    body[class*="high"] .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button:focus,
+    body[class*="dark"] .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button:hover,
+    body[class*="high"] .template-aiassistview .e-carousel .e-carousel-navigators .e-next .e-next-button:hover,
+    body[class*="dark"] .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button,
+    body[class*="high"] .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button,
+    body[class*="dark"] .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button:focus,
+    body[class*="high"] .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button:focus,
+    body[class*="dark"] .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button:hover,
+    body[class*="high"] .template-aiassistview .e-carousel .e-carousel-navigators .e-previous .e-previous-button:hover {
+        outline: none;
+        background-color: #333;
+        .e-btn-icon
+
+    {
+        color: #f0f0f0;
+    }
+
+    }
+
+    @@media only screen and (max-width: 840px) {
+        .template-aiassistview,
+        .template-aiassistview .banner-content {
+            width: 100%;
+        }
+    }
+</style>
