@@ -9,7 +9,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager UriHelper
 <div class="control-section">
     <div class="template-aiassistview">
-        <SfAIAssistView ID="aiAssistView" @ref="AIAssist" PromptSuggestions="@suggestions" PromptSuggestionsHeader="Hello! Ask Questions, to better understand how your prompt interacts with AI Help Assistance!" PromptRequested="@PromptRequest">
+        <SfAIAssistView ID="aiAssistView" @ref="AIAssist" PromptSuggestions="@suggestions" PromptSuggestionsHeader="Hello! Ask Questions, to better understand how your prompt interacts with AI Help Assistance!" PromptRequested="@PromptRequest" ShowHeader="false">
             <AssistViews>
                 <AssistView>
                     <BannerTemplate>

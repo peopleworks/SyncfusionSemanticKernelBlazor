@@ -146,3 +146,4 @@ Represents metadata for documents.
 ## Notes
 - Ensure Syncfusion and Azure services are properly configured for full functionality.
 - The AI features depend on backend services for processing prompts and documents.
+

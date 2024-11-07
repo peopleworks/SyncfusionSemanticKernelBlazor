@@ -12,7 +12,6 @@ public class MarkdownAssistant
     private readonly IKernelMemory memoryConnector;
     private readonly KernelFunction myFunction;
     private static IMemoryService memoryService;
-    public static string emptyMessage = "I don't have an answer to that question";
 
     public MarkdownAssistant()
     {
@@ -37,8 +36,7 @@ public class MarkdownAssistant
         var promptOptions = new OpenAIPromptExecutionSettings
         {
             ChatSystemPrompt =
-                $"You are a document analyzer. Your task is to analyze the provided document generate a respond. Always respond in proper HTML format, but do not include <html>, <head>, or <body> tags.",
-            ModelId = configuration["KernelMemory:Services:OpenAI:TextModel"],
+                $"You are a document analyzer. Your task is to analyze the provided documents to generate a respond. Always respond in proper HTML format, but do not include <html>, <head>, or <body> tags.",
             MaxTokens = 2048,
             Temperature = 0.5,
             TopP = 0
@@ -48,8 +46,9 @@ public class MarkdownAssistant
         var skPrompt = """
                         Question: {{$input}}
                         Tool call result: {{memory.ask $input}}
-                        If the answer is empty say "{{emptyMessage}}".
+                        If the answer is empty say "I don't have an answer to that question".
                         """;
+       
 
         myFunction = kernel.CreateFunctionFromPrompt(skPrompt, promptOptions);
 

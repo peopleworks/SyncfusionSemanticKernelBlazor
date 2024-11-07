@@ -14,7 +14,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddMemoryCache();
 //HACK:Add Syncfusion Blazor service to the container.
 builder.Services.AddSyncfusionBlazor();
-//HACK: Register SyncFusion 27.x.x
+// Register SyncFusion 27.x.x
 Syncfusion.Licensing.SyncfusionLicenseProvider
     .RegisterLicense("");
 
